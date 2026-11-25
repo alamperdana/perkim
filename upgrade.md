@@ -65,7 +65,7 @@ Referensi: panduan upgrade Laravel 11 (`laravel/docs` branch 11.x).
    - `laravel/framework` → `^11.0`
    - `nunomaduro/collision` → `^8.1`
    - `laravel/sanctum` → `^4.0`
-   - `inertiajs/inertia-laravel` → `^1.0` (sesuai panduan 11; `^1.3` sudah cukup)
+   - `inertiajs/inertia-laravel` → `^2.0` (v1.3.x tidak mendukung PHP 8.5; v2.0.28 mendukung PHP `^8.1` dan Laravel `^10|^11|^12|^13`)
    - `laravel/tinker` → `^2.9`
    - `barryvdh/laravel-dompdf` ikuti versi yang mendukung Laravel 11
    - `mavinoo/laravel-batch` ikuti versi yang mendukung Laravel 11
