@@ -3,7 +3,6 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import {
     Calendar,
     Building2,
-    Users,
     Layers,
     Shield,
     Database,
@@ -25,7 +24,6 @@ import { PageProps } from '@/types';
 interface DashboardProps {
     stats?: {
         totalUsers?: number;
-        totalPegawai?: number;
         totalTahun?: number;
     };
 }
@@ -168,27 +166,6 @@ export default function Dashboard({ stats }: DashboardProps) {
                                             <div className="text-sm font-semibold">Tahun Anggaran</div>
                                             <div className="text-xs text-muted-foreground">
                                                 Kelola tahun aktif
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <ArrowUpRight className="size-4 opacity-50 group-hover:opacity-100 transition-opacity" />
-                                </Link>
-                            </Button>
-
-                            <Button
-                                variant="outline"
-                                className="h-auto p-4 justify-between items-center group"
-                                asChild
-                            >
-                                <Link href="/master-data/pegawai">
-                                    <div className="flex items-center gap-3 text-left">
-                                        <div className="p-2 bg-muted rounded-md group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                            <Users className="size-4" />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-semibold">Data Pegawai</div>
-                                            <div className="text-xs text-muted-foreground">
-                                                Daftar pegawai & pejabat
                                             </div>
                                         </div>
                                     </div>

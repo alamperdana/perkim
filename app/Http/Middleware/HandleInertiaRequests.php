@@ -48,10 +48,6 @@ class HandleInertiaRequests extends Middleware
                     'username' => $user->username,
                     'email' => $user->email,
                     'kode_satker' => $user->kode_satker,
-                    'satker' => $user->satker ? [
-                        'kode_satker' => $user->satker->kode_satker,
-                        'nama_satker' => $user->satker->nama_satker,
-                    ] : null,
                     'roles' => $user->roles->pluck('name'),
                     'permissions' => $user->getAllPermissions()->pluck('name'),
                 ] : null,
@@ -100,7 +96,7 @@ class HandleInertiaRequests extends Middleware
             'sessionData' => [
                 'tahun' => session('tahun', (int) date('Y')),
                 'kode_satker' => session('kode_satker', $user?->kode_satker),
-                'nama_satker' => $user?->satker?->nama_satker ?? session('satker'),
+                'nama_satker' => session('satker'),
             ],
             'daftarTahun' => fn () => Tahun::orderBy('tahun', 'desc')->get(['id', 'tahun']),
             'flash' => [

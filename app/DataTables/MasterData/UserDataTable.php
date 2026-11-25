@@ -29,9 +29,6 @@ class UserDataTable extends DataTable
                 $roles = $row->getRoleNames();
                 return $row->name . $this->getRoleBadge($row->getRoleNames(), $row->isOnline());
             })
-            ->addColumn('kode_satker', function($row) {
-                return $row->satker ? $row->satker->name : '-';
-            })
             ->addColumn('action', function ($row) {
                 $actions = $this->basicActions($row);
                 return view('action', compact('actions'));

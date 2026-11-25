@@ -33,15 +33,6 @@ class User extends Authenticatable
     ];
 
     /**
-     * Relasi ke table Satker
-     */
-
-    public function satker()
-    {
-        return $this->belongsTo(Satker::class, 'kode_satker', 'kode_satker');
-    }
-    
-    /**
      * Fungsi cek user online.
      */
     public function isOnline()

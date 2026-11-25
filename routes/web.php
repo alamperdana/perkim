@@ -12,9 +12,6 @@ use App\Http\Controllers\MasterData\TahunController;
 use App\Http\Controllers\Konfigurasi\AksesRoleController;
 use App\Http\Controllers\Konfigurasi\AksesUserController;
 use App\Http\Controllers\Konfigurasi\PermissionController;
-use App\Http\Controllers\MasterData\EselonController;
-use App\Http\Controllers\MasterData\PangkatController;
-use App\Http\Controllers\MasterData\PegawaiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,15 +60,6 @@ Route::middleware('auth')->group(function () {
         Route::get('tahun-arsip', [TahunController::class, 'archive'])->name('tahun.archive');
         Route::post('tahun/{id}/restore', [TahunController::class, 'restore'])->name('tahun.restore');
         Route::delete('tahun/{id}/force-delete', [TahunController::class, 'destroyPermanent'])->name('tahun.forceDelete');
-        Route::resource('pangkat', PangkatController::class)->except(['create', 'show', 'edit']);
-        Route::resource('pegawai', PegawaiController::class);
-        Route::get('pegawai-arsip', [PegawaiController::class, 'archive'])->name('pegawai.archive');
-        Route::post('pegawai/{id}/restore', [PegawaiController::class, 'restore'])->name('pegawai.restore');
-        Route::delete('pegawai/{id}/force-delete', [PegawaiController::class, 'destroyPermanent'])->name('pegawai.forceDelete');
-        Route::resource('eselon', EselonController::class)->except(['create', 'show', 'edit']);
-        Route::get('eselon-arsip', [EselonController::class, 'archive'])->name('eselon.archive');
-        Route::post('eselon/{id}/restore', [EselonController::class, 'restore'])->name('eselon.restore');
-        Route::delete('eselon/{id}/force-delete', [EselonController::class, 'destroyPermanent'])->name('eselon.forceDelete');
     });
 });
 

@@ -12,7 +12,6 @@ import {
     Folder,
     FileText,
     Calendar,
-    Building2,
     Layers,
     type LucideIcon,
 } from 'lucide-react';
@@ -34,7 +33,6 @@ const iconMap: Record<string, LucideIcon> = {
     permission: Key,
     calendar: Calendar,
     tahun: Calendar,
-    satker: Building2,
     folder: Folder,
     file: FileText,
 };
