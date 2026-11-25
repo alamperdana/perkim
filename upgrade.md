@@ -114,7 +114,9 @@ Referensi: panduan upgrade Laravel 12 (`laravel/docs` branch 12.x).
 - Carbon: pemakaian aman (`setLocale`, `now`, `diffInMinutes`, `diffForHumans`). Tidak ada API yang dihapus.
 - Tidak ditemukan pemakaian `HasUuids`, `Storage::`, rule `image`, atau `pagination::`.
 - Test: 16 lulus, 9 gagal. Kegagalan sama dengan akhir Tahap A (komponen Blade Breeze), belum diverifikasi penyebab aslinya.
-- **Belum dikerjakan:** `spatie/laravel-permission` (tertahan di ^6.9, belum dicek versi untuk Laravel 12), `mavinoo/laravel-batch` (belum dicek).
+- `spatie/laravel-permission` **^8.5** (8.5.0, PHP ^8.3, Laravel ^12|^13). Lompat dari ^6.9. Migrasi perlu dicek di upgrade notes.
+- `mavinoo/laravel-batch` **^3.3** (3.3.0, PHP ^8.1, Laravel ^10|^11|^12|^13).
+- Test setelah kedua paket dinaikkan: 16 lulus, 9 gagal (sama seperti sebelumnya).
 
 ## 5. Tahap C: Laravel 12 → 13 (PHP 8.3+)
 

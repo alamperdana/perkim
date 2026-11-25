@@ -10,9 +10,9 @@
         "guzzlehttp/guzzle": "^7.2",
         "itsgoingd/clockwork": "^5.3",
         "laravel/tinker": "^2.8",
-        "mavinoo/laravel-batch": "^2.4",
+        "mavinoo/laravel-batch": "^3.3",
         "mockery/mockery": "^1.6",
-        "spatie/laravel-permission": "^6.9",
+        "spatie/laravel-permission": "^8.5",
         "tightenco/ziggy": "^2.7"
     },
     "require-dev": {
