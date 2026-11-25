@@ -61,6 +61,16 @@ Catatan penting:
 
 Referensi: panduan upgrade Laravel 11 (`laravel/docs` branch 11.x).
 
+**Status (hasil eksekusi):**
+- Laravel 11.57.2 terpasang. `route:list` 85 baris (sama dengan baseline).
+- Inertia **v2.0.28** (bukan v1): v1.3.x tidak mendukung PHP 8.5, dan install dengan PHP 8.5 gagal.
+- `yajra/laravel-datatables` **^11.0** dengan seluruh subpaket v11. v12+ butuh Laravel 12+.
+- `dompdf` tidak dinaikkan: `sabberworm/php-css-parser` belum mendukung PHP 8.5.
+- Verifikasi memakai PHP 8.4.28 (Homebrew `php@8.4`), karena dompdf menahan PHP 8.5.
+- Kernel dan Handler dihapus. Middleware pindah ke `bootstrap/app.php`. `RouteServiceProvider` dipertahankan (dipakai konstanta `HOME`), pendaftarannya di `config/app.php` dihapus.
+- `phpunit.xml` diarahkan ke database `perkim_test`. Factory `username` ditambahkan.
+- **Belum selesai:** 9 test gagal karena komponen Blade Breeze (`input-label`, `primary-button`, `auth-session-status`). Dugaan awal: sudah ada sebelum upgrade, belum diverifikasi.
+
 1. Ubah `composer.json` dan jalankan update. Untuk Laravel 11, naikkan:
    - `laravel/framework` → `^11.0`
    - `nunomaduro/collision` → `^8.1`
@@ -95,6 +105,16 @@ Referensi: panduan upgrade Laravel 12 (`laravel/docs` branch 12.x).
    - `inertiajs/inertia-laravel` → `^2.0` (dicek ulang di Tahap D; belum diverifikasi di Packagist)
    - `laravel/breeze` → `^2.4`
    - `spatie/laravel-permission`, `realrashid/sweet-alert`, `mavinoo/laravel-batch`: pilih versi yang mendukung Laravel 12
+
+**Status Tahap B (hasil eksekusi):**
+- Laravel **12.74.0** terpasang. Route identik dengan Laravel 11 (method, URI, nama). Jumlah 85.
+- `yajra/laravel-datatables` **^12.0** (subpaket v12). `realrashid/sweet-alert` **^8.0** (PHP ^8.3).
+- `nunomaduro/collision` **^8.8** dan `phpunit/phpunit` **^11.5** (dev). Collision v8.5 tidak cocok dengan Laravel 12.
+- `laravel/breeze` **^2.4**, `laravel/sanctum` **^4.0**, `inertiajs/inertia-laravel` **^2.0**.
+- Carbon: pemakaian aman (`setLocale`, `now`, `diffInMinutes`, `diffForHumans`). Tidak ada API yang dihapus.
+- Tidak ditemukan pemakaian `HasUuids`, `Storage::`, rule `image`, atau `pagination::`.
+- Test: 16 lulus, 9 gagal. Kegagalan sama dengan akhir Tahap A (komponen Blade Breeze), belum diverifikasi penyebab aslinya.
+- **Belum dikerjakan:** `spatie/laravel-permission` (tertahan di ^6.9, belum dicek versi untuk Laravel 12), `mavinoo/laravel-batch` (belum dicek).
 
 ## 5. Tahap C: Laravel 12 → 13 (PHP 8.3+)
 
