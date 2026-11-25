@@ -3,21 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use Inertia\Inertia;
+use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View
+    public function edit(Request $request): Response
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
+        return Inertia::render('profile/edit', [
+            'profile' => [
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+            ],
         ]);
     }
 
@@ -34,7 +38,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::route('profile.edit')->with('success', 'Profil berhasil diperbarui.');
     }
 
     /**

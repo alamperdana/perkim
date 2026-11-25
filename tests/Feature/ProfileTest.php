@@ -21,6 +21,21 @@ class ProfileTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_profile_page_renders_inertia_component_with_user_data(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->get('/profile');
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('profile/edit')
+            ->where('profile.name', $user->name)
+            ->where('profile.email', $user->email)
+        );
+    }
+
     public function test_profile_information_can_be_updated(): void
     {
         $user = User::factory()->create();
