@@ -11,6 +11,8 @@ use App\Repositories\MenuRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 use Mavinoo\Batch\BatchFacade;
 
 class MenuController extends Controller
@@ -23,23 +25,56 @@ class MenuController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(MenuDataTable $menuDataTable)
+    public function index(Request $request, MenuDataTable $menuDataTable)
     {
         $this->authorize('read konfigurasi/menu');
-        return $menuDataTable->render('pages.konfigurasi.menu');
+
+        if ($request->wantsJson() && !$request->inertia()) {
+            return $menuDataTable->ajax();
+        }
+
+        $query = Menu::with('mainMenu');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('category', 'ilike', "%{$search}%")
+                  ->orWhere('url', 'ilike', "%{$search}%");
+            });
+        }
+
+        $menus = $query->orderBy('orders', 'asc')->get();
+        $mainMenuList = Menu::whereNull('main_menu_id')->orderBy('orders', 'asc')->get(['id', 'name']);
+
+        return Inertia::render('konfigurasi/menu', [
+            'menus' => $menus,
+            'mainMenuList' => $mainMenuList,
+            'filters' => [
+                'search' => $request->search ?? '',
+            ],
+            'can' => [
+                'create' => auth()->user()->can('create konfigurasi/menu'),
+                'update' => auth()->user()->can('update konfigurasi/menu'),
+                'delete' => auth()->user()->can('delete konfigurasi/menu'),
+                'sort' => auth()->user()->can('sort konfigurasi/menu'),
+            ],
+        ]);
     }
 
-    public function sort()
+    public function sort(Request $request)
     {
+        $this->authorize('sort konfigurasi/menu');
+
         $menus = $this->repository->getMenus();
 
         $data = [];
         $i = 0;
         foreach($menus as $mm) {
-            $i ++;
+            $i++;
             $data[] = ['id' => $mm->id, 'orders' => $i];
             foreach($mm->subMenus as $sm) {
-                $i ++;
+                $i++;
                 $data[] = ['id' => $sm->id, 'orders' => $i];
             }
         }
@@ -47,7 +82,12 @@ class MenuController extends Controller
         Cache::forget('menus');
         
         BatchFacade::update(new Menu(), $data, 'id');
-        responseSuccess(true);
+
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess(true);
+        }
+
+        return redirect()->route('konfigurasi.menu.index')->with('success', 'Urutan menu berhasil diselaraskan.');
     }
 
     /**
@@ -71,7 +111,7 @@ class MenuController extends Controller
             'orders' => $request->orders,
             'icon' => $request->icon,
             'category' => $request->category,
-            'main_menu_id' => $request->main_menu, 
+            'main_menu_id' => $request->level_menu === 'main_menu' ? null : $request->main_menu, 
         ]);
     }
 
@@ -88,16 +128,26 @@ class MenuController extends Controller
             $menu->save();
     
             foreach ($request->permissions ?? [] as $permission) {
-                Permission::create(['name' => $permission. " {$menu->url}"])->menus()->attach($menu);
+                Permission::create(['name' => $permission . " {$menu->url}"])->menus()->attach($menu);
             }
+
+            Cache::forget('menus');
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return responseError($th);
+            if ($request->wantsJson() && !$request->inertia()) {
+                return responseError($th);
+            }
+
+            return back()->with('error', 'Gagal menambahkan menu: ' . $th->getMessage());
         }
 
-        return responseSuccess();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess();
+        }
+
+        return redirect()->route('konfigurasi.menu.index')->with('success', 'Menu berhasil ditambahkan.');
     }
 
     /**
@@ -130,16 +180,6 @@ class MenuController extends Controller
      */
     public function update(MenuRequest $request, Menu $menu)
     {
-        // $this->authorize('update konfigurasi/menu');
-
-        // $this->fillData($request, $menu);
-        // if ($request->level_menu == 'main_menu') {
-        //     $menu->main_menu_id = null;
-        // }
-        // $menu->save();
-
-        // return responseSuccess(true);
-
         DB::beginTransaction();
         try {
             $this->authorize('update konfigurasi/menu');
@@ -147,60 +187,68 @@ class MenuController extends Controller
             $oldUrl = $menu->getOriginal('url');
             $newUrl = $request->url;
 
-            logger()->info("Old URL: {$oldUrl}, New URL: {$newUrl}");
-
             $this->fillData($request, $menu);
             $menu->save();
-            logger()->info("Menu updated: ID {$menu->id}");
 
             if ($oldUrl !== $newUrl) {
                 $permissions = Permission::where('name', 'like', "%{$oldUrl}%")->get();
-                logger()->info("Permissions found: " . $permissions->count());
-
                 foreach ($permissions as $permission) {
                     $permission->name = str_replace($oldUrl, $newUrl, $permission->name);
                     $permission->save();
-                    logger()->info("Permission updated: {$permission->name}");
                 }
             }
 
+            Cache::forget('menus');
             DB::commit();
-            return responseSuccess(true);
+
+            if ($request->wantsJson() && !$request->inertia()) {
+                return responseSuccess(true);
+            }
+
+            return redirect()->route('konfigurasi.menu.index')->with('success', 'Menu berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
             logger()->error("Update failed: " . $th->getMessage());
-            return responseError($th->getMessage());
+
+            if ($request->wantsJson() && !$request->inertia()) {
+                return responseError($th->getMessage());
+            }
+
+            return back()->with('error', 'Gagal memperbarui menu: ' . $th->getMessage());
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Menu $menu)
+    public function destroy(Request $request, Menu $menu)
     {
         DB::beginTransaction();
         try {
             $this->authorize('delete konfigurasi/menu');
 
-            // Ambil semua permission_id dari tabel permissions terkait menu yang akan dihapus
             $permissionIds = $menu->permissions()->pluck('permissions.id')->toArray();
-
-            // Hapus relasi di tabel menu_permission
             $menu->permissions()->detach();
-
-            // Hapus data di tabel permissions berdasarkan ID
             Permission::whereIn('id', $permissionIds)->delete();
-
-            // Hapus data menu
             $menu->delete();
 
+            Cache::forget('menus');
             DB::commit();
 
-            return responseSuccessDelete();
+            if ($request->wantsJson() && !$request->inertia()) {
+                return responseSuccessDelete();
+            }
+
+            return redirect()->route('konfigurasi.menu.index')->with('success', 'Menu berhasil dihapus.');
         } catch (\Throwable $th) {
             DB::rollBack();
             logger()->error("Deletion failed: " . $th->getMessage());
-            return responseError($th->getMessage());
+
+            if ($request->wantsJson() && !$request->inertia()) {
+                return responseError($th->getMessage());
+            }
+
+            return back()->with('error', 'Gagal menghapus menu: ' . $th->getMessage());
         }
     }
 }

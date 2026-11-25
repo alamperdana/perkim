@@ -7,69 +7,58 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Repositories\MenuRepository;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AksesUserController extends Controller
 {
-    public function __construct(protected MenuRepository $menuRepository) {
+    public function __construct(protected MenuRepository $menuRepository)
+    {
         $this->menuRepository = $menuRepository;
     }
-    
+
     /**
      * Display a listing of the resource.
      */
-    public function index(UserDataTable $userDataTable)
+    public function index(Request $request, UserDataTable $userDataTable)
     {
-        return $userDataTable->render('pages.konfigurasi.akses-user');
-    }
+        $this->authorize('read konfigurasi/akses-user');
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if ($request->wantsJson() && !$request->inertia()) {
+            return $userDataTable->ajax();
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(User $user)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(User $user)
-    {
-        return view('pages.konfigurasi.akses-user-form', [
-            'data' => $user,
-            'action' => route('konfigurasi.akses-user.update', $user->id),
-            'users' => User::where('id', '!=', $user->id)->get()->pluck('id', 'name'),
-            'menus' => $this->menuRepository->getMainMenuWithPermissions()
+        return Inertia::render('konfigurasi/akses-user', [
+            'daftarUser' => User::orderBy('id')->get(['id', 'name', 'username']),
+            'menus' => $this->menuRepository->getMenuTreeForAkses(),
+            'can' => [
+                'update' => auth()->user()->can('update konfigurasi/akses-user'),
+            ],
         ]);
     }
 
     /**
-     * getPermissionsByUser
+     * Ambil permission langsung milik user, untuk fitur copy dari user.
      */
-
-     public function getPermissionsByUser(User $user)
-     {
-         return view('pages.konfigurasi.akses-user-items', [
-             'data' => $user,
-             'menus' => $this->menuRepository->getMainMenuWithPermissions()
-         ]);
-     }
+    public function getPermissionsByUser(User $user)
+    {
+        return response()->json([
+            'permissions' => $user->getDirectPermissions()->pluck('name'),
+        ]);
+    }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, User $user)
     {
-        $user->syncPermissions($request->permissions);
+        $this->authorize('update konfigurasi/akses-user');
 
-        return responseSuccess(true);
+        $user->syncPermissions($request->input('permissions', []));
+
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess(true);
+        }
+
+        return redirect()->route('konfigurasi.akses-user.index')->with('success', 'Akses user berhasil diperbarui.');
     }
 }

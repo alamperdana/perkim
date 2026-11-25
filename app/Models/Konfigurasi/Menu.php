@@ -16,6 +16,11 @@ class Menu extends Model
         return $this->hasMany(Menu::class, 'main_menu_id');
     }
 
+    public function mainMenu()
+    {
+        return $this->belongsTo(Menu::class, 'main_menu_id');
+    }
+
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'menu_permission', 'menu_id', 'permission_id');

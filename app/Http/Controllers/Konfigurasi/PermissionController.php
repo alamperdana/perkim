@@ -7,25 +7,28 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Konfigurasi\PermissionRequest;
 use App\Models\Permission;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PermissionController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(PermissionDataTable $permissionDataTable)
+    public function index(Request $request, PermissionDataTable $permissionDataTable)
     {
-        return $permissionDataTable->render('pages.konfigurasi.permission');
-    }
+        $this->authorize('read konfigurasi/permissions');
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('pages.konfigurasi.permission-form', [
-            'data' => new Permission(),
-            'action' => route('konfigurasi.permissions.store')
+        if ($request->wantsJson() && !$request->inertia()) {
+            return $permissionDataTable->ajax();
+        }
+
+        return Inertia::render('konfigurasi/permissions', [
+            'daftarPermission' => Permission::orderBy('id')->get(),
+            'can' => [
+                'create' => auth()->user()->can('create konfigurasi/permissions'),
+                'update' => auth()->user()->can('update konfigurasi/permissions'),
+                'delete' => auth()->user()->can('delete konfigurasi/permissions'),
+            ],
         ]);
     }
 
@@ -34,31 +37,16 @@ class PermissionController extends Controller
      */
     public function store(PermissionRequest $request)
     {
+        $this->authorize('create konfigurasi/permissions');
+
         $permission = new Permission($request->validated());
         $permission->save();
 
-        return responseSuccess();
-    }
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess();
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Permission $permission)
-    {
-        return view('pages.konfigurasi.permission-form', [
-            'data' => $permission,
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Permission $permission)
-    {
-        return view('pages.konfigurasi.permission-form', [
-            'data' => $permission,
-            'action' => route('konfigurasi.permissions.update', $permission->id)
-        ]);
+        return redirect()->route('konfigurasi.permissions.index')->with('success', 'Permission berhasil ditambahkan.');
     }
 
     /**
@@ -66,19 +54,31 @@ class PermissionController extends Controller
      */
     public function update(PermissionRequest $request, Permission $permission)
     {
+        $this->authorize('update konfigurasi/permissions');
+
         $permission->fill($request->validated());
         $permission->save();
 
-        return responseSuccess(true);
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess(true);
+        }
+
+        return redirect()->route('konfigurasi.permissions.index')->with('success', 'Permission berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Permission $permission)
+    public function destroy(Request $request, Permission $permission)
     {
+        $this->authorize('delete konfigurasi/permissions');
+
         $permission->delete();
 
-        return responseSuccessDelete();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessDelete();
+        }
+
+        return redirect()->route('konfigurasi.permissions.index')->with('success', 'Permission berhasil dihapus.');
     }
 }

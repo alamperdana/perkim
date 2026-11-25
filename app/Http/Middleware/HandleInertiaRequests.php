@@ -2,8 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Tahun;
+use App\Repositories\MenuRepository;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -35,8 +38,80 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return array_merge(parent::share($request), [
-            //
+            'auth' => [
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'kode_satker' => $user->kode_satker,
+                    'satker' => $user->satker ? [
+                        'kode_satker' => $user->satker->kode_satker,
+                        'nama_satker' => $user->satker->nama_satker,
+                    ] : null,
+                    'roles' => $user->roles->pluck('name'),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                ] : null,
+            ],
+            'navigation' => function () use ($user) {
+                if (!$user) {
+                    return [];
+                }
+
+                $groupedMenus = (new MenuRepository())->getMenus()->groupBy('category');
+                $navGroups = [];
+
+                foreach ($groupedMenus as $category => $items) {
+                    $navItems = [];
+                    foreach ($items as $menu) {
+                        if ($user->can('read ' . $menu->url)) {
+                            $subItems = [];
+                            foreach ($menu->subMenus as $subMenu) {
+                                if ($user->can('read ' . $subMenu->url)) {
+                                    $subItems[] = [
+                                        'title' => $subMenu->name,
+                                        'url' => '/' . ltrim($subMenu->url, '/'),
+                                    ];
+                                }
+                            }
+
+                            $navItems[] = [
+                                'title' => $menu->name,
+                                'url' => count($subItems) === 0 ? '/' . ltrim($menu->url, '/') : null,
+                                'icon' => $menu->icon,
+                                'items' => count($subItems) > 0 ? $subItems : null,
+                            ];
+                        }
+                    }
+
+                    if (count($navItems) > 0) {
+                        $navGroups[] = [
+                            'title' => $category,
+                            'items' => $navItems,
+                        ];
+                    }
+                }
+
+                return $navGroups;
+            },
+            'sessionData' => [
+                'tahun' => session('tahun', (int) date('Y')),
+                'kode_satker' => session('kode_satker', $user?->kode_satker),
+                'nama_satker' => $user?->satker?->nama_satker ?? session('satker'),
+            ],
+            'daftarTahun' => fn () => Tahun::orderBy('tahun', 'desc')->get(['id', 'tahun']),
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'info' => fn () => $request->session()->get('info'),
+                'warning' => fn () => $request->session()->get('warning'),
+            ],
+            'ziggy' => fn () => array_merge((new Ziggy)->toArray(), [
+                'location' => $request->url(),
+            ]),
         ]);
     }
 }

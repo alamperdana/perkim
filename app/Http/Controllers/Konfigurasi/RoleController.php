@@ -7,25 +7,28 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Konfigurasi\RoleRequest;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class RoleController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(RoleDataTable $roleDataTable)
+    public function index(Request $request, RoleDataTable $roleDataTable)
     {
-        return $roleDataTable->render('pages.konfigurasi.role');
-    }
+        $this->authorize('read konfigurasi/roles');
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('pages.konfigurasi.role-form', [
-            'data' => new Role(),
-            'action' => route('konfigurasi.roles.store')
+        if ($request->wantsJson() && !$request->inertia()) {
+            return $roleDataTable->ajax();
+        }
+
+        return Inertia::render('konfigurasi/roles', [
+            'daftarRole' => Role::orderBy('id')->get(),
+            'can' => [
+                'create' => auth()->user()->can('create konfigurasi/roles'),
+                'update' => auth()->user()->can('update konfigurasi/roles'),
+                'delete' => auth()->user()->can('delete konfigurasi/roles'),
+            ],
         ]);
     }
 
@@ -34,31 +37,16 @@ class RoleController extends Controller
      */
     public function store(RoleRequest $request)
     {
+        $this->authorize('create konfigurasi/roles');
+
         $role = new Role($request->validated());
         $role->save();
 
-        return responseSuccess();
-    }
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess();
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Role $role)
-    {
-        return view('pages.konfigurasi.role-form', [
-            'data' => $role,
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Role $role)
-    {
-        return view('pages.konfigurasi.role-form', [
-            'data' => $role,
-            'action' => route('konfigurasi.roles.update', $role->id)
-        ]);
+        return redirect()->route('konfigurasi.roles.index')->with('success', 'Role berhasil ditambahkan.');
     }
 
     /**
@@ -66,19 +54,31 @@ class RoleController extends Controller
      */
     public function update(RoleRequest $request, Role $role)
     {
+        $this->authorize('update konfigurasi/roles');
+
         $role->fill($request->validated());
         $role->save();
 
-        return responseSuccess(true);
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess(true);
+        }
+
+        return redirect()->route('konfigurasi.roles.index')->with('success', 'Role berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Role $role)
+    public function destroy(Request $request, Role $role)
     {
+        $this->authorize('delete konfigurasi/roles');
+
         $role->delete();
 
-        return responseSuccessDelete();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessDelete();
+        }
+
+        return redirect()->route('konfigurasi.roles.index')->with('success', 'Role berhasil dihapus.');
     }
 }

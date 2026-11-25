@@ -7,15 +7,29 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\MasterData\EselonRequest;
 use App\Models\Eselon;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class EselonController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(EselonDataTable $datatables)
+    public function index(Request $request, EselonDataTable $datatables)
     {
-        return $datatables->render('pages.master-data.eselon');
+        $this->authorize('read master-data/eselon');
+
+        if ($request->wantsJson() && !$request->inertia()) {
+            return $datatables->ajax();
+        }
+
+        return Inertia::render('master-data/eselon', [
+            'daftarEselon' => Eselon::orderBy('id')->get(),
+            'can' => [
+                'create' => auth()->user()->can('create master-data/eselon'),
+                'update' => auth()->user()->can('update master-data/eselon'),
+                'delete' => auth()->user()->can('delete master-data/eselon'),
+            ],
+        ]);
     }
 
     /**
@@ -34,10 +48,16 @@ class EselonController extends Controller
      */
     public function store(EselonRequest $request, Eselon $eselon)
     {
+        $this->authorize('create master-data/eselon');
+
         $eselon->fill($request->only('nama_eselon'));
         $eselon->save();
 
-        return responseSuccess();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess();
+        }
+
+        return redirect()->route('master-data.eselon.index')->with('success', 'Data eselon berhasil ditambahkan.');
     }
 
     /**
@@ -65,52 +85,91 @@ class EselonController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Eselon $eselon)
+    public function update(EselonRequest $request, Eselon $eselon)
     {
+        $this->authorize('update master-data/eselon');
+
         $eselon->fill($request->only('nama_eselon'));
         $eselon->save();
 
-        return responseSuccess(true);
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess(true);
+        }
+
+        return redirect()->route('master-data.eselon.index')->with('success', 'Data eselon berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Eselon $eselon)
+    public function destroy(Request $request, Eselon $eselon)
     {
+        $this->authorize('delete master-data/eselon');
+
         $eselon->delete();
 
-        return responseSuccessDelete();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessDelete();
+        }
+
+        return redirect()->route('master-data.eselon.index')->with('success', 'Data eselon dipindahkan ke arsip.');
     }
 
     /**
      * Fungsi untuk menampilkan data yang dihapus
      */
-    public function archive()
+    public function archive(Request $request)
     {
-        $archivedEselon = Eselon::onlyTrashed()->get();
-        return view('pages.master-data.eselon-arsip', compact('archivedEselon'));
+        $this->authorize('read master-data/eselon');
+
+        if ($request->wantsJson() && !$request->inertia()) {
+            return Eselon::onlyTrashed()->get();
+        }
+
+        return Inertia::render('master-data/eselon-arsip', [
+            'daftarArsip' => Eselon::onlyTrashed()->orderBy('deleted_at', 'desc')->get(),
+            'can' => [
+                'update' => auth()->user()->can('update master-data/eselon'),
+                'delete' => auth()->user()->can('delete master-data/eselon'),
+            ],
+        ]);
     }
 
     /**
-     * Fungsi untuk restore transport
+     * Fungsi untuk restore eselon
      */
-    public function restore($id)
+    public function restore(Request $request, $id)
     {
-        $eselon = Eselon::onlyTrashed()->find($id);
-        $eselon->restore();
+        $this->authorize('update master-data/eselon');
 
-        return responseSuccessRestore();
+        $eselon = Eselon::onlyTrashed()->find($id);
+        if ($eselon) {
+            $eselon->restore();
+        }
+
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessRestore();
+        }
+
+        return redirect()->route('master-data.eselon.archive')->with('success', 'Data eselon berhasil dipulihkan.');
     }
 
     /**
      * Fungsi untuk hapus permanen
      */
-    public function destroyPermanent($id)
+    public function destroyPermanent(Request $request, $id)
     {
-        $eselon = Eselon::onlyTrashed()->find($id);
-        $eselon->forceDelete();
+        $this->authorize('delete master-data/eselon');
 
-        return responseSuccessForceDelete();
+        $eselon = Eselon::onlyTrashed()->find($id);
+        if ($eselon) {
+            $eselon->forceDelete();
+        }
+
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessForceDelete();
+        }
+
+        return redirect()->route('master-data.eselon.archive')->with('success', 'Data eselon berhasil dihapus permanen.');
     }
 }

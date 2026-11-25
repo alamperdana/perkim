@@ -16,6 +16,7 @@
         "mavinoo/laravel-batch": "^2.4",
         "realrashid/sweet-alert": "^7.2",
         "spatie/laravel-permission": "^6.9",
+        "tightenco/ziggy": "^2.7",
         "yajra/laravel-datatables": "^10.0"
     },
     "require-dev": {

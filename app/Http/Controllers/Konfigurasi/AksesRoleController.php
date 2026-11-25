@@ -4,56 +4,45 @@ namespace App\Http\Controllers\Konfigurasi;
 
 use App\DataTables\Konfigurasi\RoleDataTable;
 use App\Http\Controllers\Controller;
-use App\Models\Konfigurasi\Menu;
 use App\Models\Role;
 use App\Repositories\MenuRepository;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AksesRoleController extends Controller
 {
-    public function __construct(protected MenuRepository $menuRepository) {
+    public function __construct(protected MenuRepository $menuRepository)
+    {
         $this->menuRepository = $menuRepository;
     }
-    
+
     /**
      * Display a listing of the resource.
      */
-    public function index(RoleDataTable $roleDataTable)
+    public function index(Request $request, RoleDataTable $roleDataTable)
     {
-        return $roleDataTable->render('pages.konfigurasi.akses-role');
-    }
+        $this->authorize('read konfigurasi/akses-role');
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Role $role)
-    {
-        //
-    }
+        if ($request->wantsJson() && !$request->inertia()) {
+            return $roleDataTable->ajax();
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Role $role)
-    {
-        $roles = Role::where('id', '!=', $role->id)->get()->pluck('id', 'name');
-        return view('pages.konfigurasi.akses-role-form', [
-            'data' => $role,
-            'action' => route('konfigurasi.akses-role.update', $role->id),
-            'menus' => $this->menuRepository->getMainMenuWithPermissions(),
-            'roles' => $roles
+        return Inertia::render('konfigurasi/akses-role', [
+            'daftarRole' => Role::orderBy('id')->get(['id', 'name', 'guard_name']),
+            'menus' => $this->menuRepository->getMenuTreeForAkses(),
+            'can' => [
+                'update' => auth()->user()->can('update konfigurasi/akses-role'),
+            ],
         ]);
     }
 
     /**
-     * getPermissionsByRole
+     * Ambil permission yang dimiliki role, untuk fitur copy dari role.
      */
-
     public function getPermissionsByRole(Role $role)
     {
-        return view('pages.konfigurasi.akses-role-items', [
-            'data' => $role,
-            'menus' => $this->menuRepository->getMainMenuWithPermissions()
+        return response()->json([
+            'permissions' => $role->permissions()->pluck('name'),
         ]);
     }
 
@@ -62,8 +51,14 @@ class AksesRoleController extends Controller
      */
     public function update(Request $request, Role $role)
     {
-        $role->syncPermissions($request->permissions);
+        $this->authorize('update konfigurasi/akses-role');
 
-        return responseSuccess(true);
+        $role->syncPermissions($request->input('permissions', []));
+
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess(true);
+        }
+
+        return redirect()->route('konfigurasi.akses-role.index')->with('success', 'Akses role berhasil diperbarui.');
     }
 }

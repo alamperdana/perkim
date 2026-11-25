@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Models\Tahun;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
@@ -18,10 +19,13 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(): Response
     {
-        $tahun = Tahun::orderBy('tahun', 'asc')->get();
-        return view('auth.login', compact('tahun'));
+        $tahun = Tahun::orderBy('tahun', 'asc')->get(['id', 'tahun']);
+        return Inertia::render('auth/login', [
+            'tahun' => $tahun,
+            'defaultTahun' => (int) date('Y'),
+        ]);
     }
 
     /**

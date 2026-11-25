@@ -7,16 +7,27 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\MasterData\TahunRequest;
 use App\Models\Tahun;
 use Illuminate\Http\Request;
-use PhpOffice\PhpSpreadsheet\Reader\Xml\Style\Fill;
+use Inertia\Inertia;
 
 class TahunController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(TahunDataTable $tahunDataTable)
+    public function index(Request $request, TahunDataTable $tahunDataTable)
     {
-        return $tahunDataTable->render('pages.master-data.tahun');
+        if ($request->wantsJson() && !$request->inertia()) {
+            return $tahunDataTable->ajax();
+        }
+
+        $tahun = Tahun::orderBy('tahun', 'desc')->get();
+        $archivedCount = Tahun::onlyTrashed()->count();
+
+        return Inertia::render('master-data/tahun', [
+            'daftarTahun' => $tahun,
+            'archivedCount' => $archivedCount,
+            'currentYear' => (int) date('Y'),
+        ]);
     }
 
     /**
@@ -38,7 +49,11 @@ class TahunController extends Controller
         $tahun->fill($request->only(['tahun']));
         $tahun->save();
 
-        return responseSuccess();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess();
+        }
+
+        return redirect()->route('master-data.tahun.index')->with('success', 'Tahun anggaran berhasil ditambahkan.');
     }
 
     /**
@@ -71,41 +86,61 @@ class TahunController extends Controller
         $tahun->fill($request->only(['tahun']));
         $tahun->save();
 
-        return responseSuccess(true);
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess(true);
+        }
+
+        return redirect()->route('master-data.tahun.index')->with('success', 'Tahun anggaran berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Tahun $tahun)
+    public function destroy(Request $request, Tahun $tahun)
     {
         $tahun->delete();
 
-        return responseSuccessDelete();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessDelete();
+        }
+
+        return redirect()->route('master-data.tahun.index')->with('success', 'Tahun anggaran dipindahkan ke arsip.');
     }
 
     // Fungsi untuk menampilkan data yang dihapus
     public function archive()
     {
-        $archivedTahun = Tahun::onlyTrashed()->get();
+        $archivedTahun = Tahun::onlyTrashed()->orderBy('deleted_at', 'desc')->get();
         return view('pages.master-data.tahun-arsip', compact('archivedTahun'));
     }
 
     // Fungsi untuk restore tahun
-    public function restore($id)
+    public function restore(Request $request, $id)
     {
         $tahun = Tahun::onlyTrashed()->find($id);
-        $tahun->restore();
+        if ($tahun) {
+            $tahun->restore();
+        }
 
-        return responseSuccessRestore();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessRestore();
+        }
+
+        return redirect()->route('master-data.tahun.index')->with('success', 'Tahun anggaran berhasil dipulihkan.');
     }
 
     // Fungsi untuk hapus permanen
-    public function destroyPermanent($id)
+    public function destroyPermanent(Request $request, $id)
     {
         $tahun = Tahun::onlyTrashed()->find($id);
-        $tahun->forceDelete();
+        if ($tahun) {
+            $tahun->forceDelete();
+        }
 
-        return responseSuccessForceDelete();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessForceDelete();
+        }
+
+        return redirect()->route('master-data.tahun.index')->with('success', 'Tahun anggaran berhasil dihapus permanen.');
     }
 }

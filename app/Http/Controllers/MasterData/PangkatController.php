@@ -2,32 +2,31 @@
 
 namespace App\Http\Controllers\MasterData;
 
+use App\DataTables\MasterData\PangkatDataTable;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MasterData\PangkatRequest;
 use App\Models\Pangkat;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use App\DataTables\MasterData\PangkatDataTable;
-use App\Http\Requests\MasterData\PangkatRequest;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
+use Inertia\Inertia;
 
 class PangkatController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(PangkatDataTable $dataTable)
+    public function index(Request $request, PangkatDataTable $pangkatDataTable)
     {
-        return $dataTable->render('pages.master-data.pangkat');
-    }
+        if ($request->wantsJson() && !$request->inertia()) {
+            return $pangkatDataTable->ajax();
+        }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('pages.master-data.pangkat-form', [
-            'data' => new Pangkat(),
-            'action' => route('master-data.pangkat.store')
+        return Inertia::render('master-data/pangkat', [
+            'daftarPangkat' => Pangkat::orderBy('id')->get(),
+            'can' => [
+                'create' => auth()->user()->can('create master-data/pangkat'),
+                'update' => auth()->user()->can('update master-data/pangkat'),
+                'delete' => auth()->user()->can('delete master-data/pangkat'),
+            ],
         ]);
     }
 
@@ -36,53 +35,42 @@ class PangkatController extends Controller
      */
     public function store(PangkatRequest $request, Pangkat $pangkat)
     {
-
         $pangkat->fill($request->only(['pangkat', 'golongan', 'pnsyes']));
         $pangkat->save();
 
-        return responseSuccess();
-    }
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess();
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Pangkat $pangkat)
-    {
-        return view('pages.master-data.pangkat-form', [
-            'data' => $pangkat,
-            'action' => null
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Pangkat $pangkat)
-    {
-        return view('pages.master-data.pangkat-form', [
-            'data' => $pangkat,
-            'action' => route('master-data.pangkat.update', $pangkat->id)
-        ]);
+        return redirect()->route('master-data.pangkat.index')->with('success', 'Data pangkat berhasil ditambahkan.');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Pangkat $pangkat)
+    public function update(PangkatRequest $request, Pangkat $pangkat)
     {
         $pangkat->fill($request->only(['pangkat', 'golongan', 'pnsyes']));
         $pangkat->save();
 
-        return responseSuccess(true);
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccess(true);
+        }
+
+        return redirect()->route('master-data.pangkat.index')->with('success', 'Data pangkat berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Pangkat $pangkat)
+    public function destroy(Request $request, Pangkat $pangkat)
     {
         $pangkat->delete();
 
-        return responseSuccessDelete();
+        if ($request->wantsJson() && !$request->inertia()) {
+            return responseSuccessDelete();
+        }
+
+        return redirect()->route('master-data.pangkat.index')->with('success', 'Data pangkat berhasil dihapus.');
     }
 }
