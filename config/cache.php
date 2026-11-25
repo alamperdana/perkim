@@ -108,4 +108,21 @@ return [
 
     'prefix' => env('CACHE_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Serializable Classes
+    |--------------------------------------------------------------------------
+    |
+    | This option controls which PHP classes may be unserialized from the cache.
+    | Setting it to false prevents object injection through cached data. The
+    | menus() helper caches a Collection of Konfigurasi\Menu models, so those
+    | classes are explicitly allowed.
+    |
+    */
+
+    'serializable_classes' => [
+        \Illuminate\Support\Collection::class,
+        \App\Models\Konfigurasi\Menu::class,
+    ],
+
 ];

@@ -211,4 +211,17 @@ return [
 
     'partitioned' => false,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Serialization
+    |--------------------------------------------------------------------------
+    |
+    | This value controls the serialization strategy for session data. The
+    | "json" strategy avoids PHP object injection ("gadget chain") attacks
+    | if the APP_KEY is leaked.
+    |
+    */
+
+    'serialization' => 'json',
+
 ];
