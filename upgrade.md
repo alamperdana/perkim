@@ -110,7 +110,7 @@ Referensi: panduan upgrade Laravel 12 (`laravel/docs` branch 12.x).
 - Laravel **12.74.0** terpasang. Route identik dengan Laravel 11 (method, URI, nama). Jumlah 85.
 - `yajra/laravel-datatables` **^12.0** (subpaket v12). `realrashid/sweet-alert` **^8.0** (PHP ^8.3).
 - `nunomaduro/collision` **^8.8** dan `phpunit/phpunit` **^11.5** (dev). Collision v8.5 tidak cocok dengan Laravel 12.
-- `laravel/breeze` **^2.4**, `laravel/sanctum` **^4.0**, `inertiajs/inertia-laravel` **^2.0**.
+- `laravel/breeze` **^2.4**, `laravel/sanctum` **^4.5**, `laravel/tinker` **^2.10**, `inertiajs/inertia-laravel` **^2.0**.
 - Carbon: pemakaian aman (`setLocale`, `now`, `diffInMinutes`, `diffForHumans`). Tidak ada API yang dihapus.
 - Tidak ditemukan pemakaian `HasUuids`, `Storage::`, rule `image`, atau `pagination::`.
 - Test: 16 lulus, 9 gagal. Kegagalan sama dengan akhir Tahap A (komponen Blade Breeze), belum diverifikasi penyebab aslinya.
