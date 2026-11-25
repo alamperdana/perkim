@@ -118,6 +118,17 @@ Referensi: panduan upgrade Laravel 12 (`laravel/docs` branch 12.x).
 - `mavinoo/laravel-batch` **^3.3** (3.3.0, PHP ^8.1, Laravel ^10|^11|^12|^13).
 - Test setelah kedua paket dinaikkan: 16 lulus, 9 gagal (sama seperti sebelumnya).
 
+**Perbaikan sebelum Tahap C (commit `42e6a75`):**
+- Diterbitkan 13 komponen Blade Breeze yang hilang ke `resources/views/components/` (disalin dari stub `laravel/breeze`, tidak menimpa file yang sudah ada).
+- `resources/views/layouts/guest.blade.php` dibuat dari stub, entry `@vite` diubah ke `resources/js/app.tsx` (sesuai `app.blade.php`). Stub asli memakai `app.js` yang tidak ada di build React.
+- Hasil test: 22 lulus, 3 gagal (dari 16/9).
+- Sisa 3 gagal bukan regresi upgrade. Test mengasumsikan skeleton Breeze, sedangkan app sudah berbeda:
+  - `AuthenticationTest` dan `RegistrationTest` mengirim `email`+`password`, sedangkan login memakai `LoginRequest` custom (field `tahun`/`username`) dan register tanpa field itu.
+  - `ExampleTest` mengharapkan 200 di `/`, padahal `routes/web.php` redirect ke `login`.
+- `app/View/Components/AppLayout.php` dari Breeze **tidak** diterbitkan. Stub-nya merender `layouts.app` tanpa `$slot`, sedangkan `layouts/app.blade.php` memakai `@yield('content')`.
+
+Keputusan yang masih perlu Anda ambil: perbaiki test agar sesuai app, atau terima 3 test ini sebagai pengecualian sebelum Tahap C.
+
 ## 5. Tahap C: Laravel 12 → 13 (PHP 8.3+)
 
 Referensi: panduan upgrade Laravel 13 (`laravel/docs` branch 13.x).
