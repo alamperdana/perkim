@@ -18,5 +18,6 @@ class TahunSeeder extends Seeder
 
         Tahun::create(['tahun' => '2024', 'created_at' => $now, 'updated_at' => $now]);
         Tahun::create(['tahun' => '2025', 'created_at' => $now, 'updated_at' => $now]);
+        Tahun::create(['tahun' => '2026', 'created_at' => $now, 'updated_at' => $now]);
     }
 }
