@@ -92,7 +92,6 @@ class UserDataTable extends DataTable
             Column::make('name')->title('Name & Role')->orderable(false)->width(60),
             Column::make('username'),
             Column::make('email'),
-            Column::make('kode_satker')->title('Satuan Kerja'),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)
