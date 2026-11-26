@@ -19,6 +19,5 @@
     </head>
     <body class="font-sans antialiased bg-background text-foreground min-h-screen">
         @inertia
-        <script data-page="app" type="application/json">{!! json_encode($page) !!}</script>
     </body>
 </html>
