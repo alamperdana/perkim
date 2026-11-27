@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use App\Models\Tahun;
+use Illuminate\Support\Facades\Storage;
 use App\Repositories\MenuRepository;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -99,6 +101,10 @@ class HandleInertiaRequests extends Middleware
                 'nama_satker' => session('satker'),
             ],
             'daftarTahun' => fn () => Tahun::orderBy('tahun', 'desc')->get(['id', 'tahun']),
+            'appName' => fn () => Setting::get('app_name', config('app.name', 'PERKIM')),
+            'logoUrl' => fn () => ($path = Setting::get('logo_path'))
+                ? Storage::disk('public')->url($path)
+                : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

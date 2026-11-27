@@ -6,6 +6,7 @@ use App\DataTables\MasterData\UserDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Repositories\MenuRepository;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -53,7 +54,18 @@ class AksesUserController extends Controller
     {
         $this->authorize('update konfigurasi/akses-user');
 
+        $lama = $user->getDirectPermissions()->pluck('name')->sort()->values()->all();
         $user->syncPermissions($request->input('permissions', []));
+        $baru = $user->fresh()->getDirectPermissions()->pluck('name')->sort()->values()->all();
+
+        if ($lama !== $baru) {
+            ActivityLogger::catat(
+                event: 'akses_diubah',
+                deskripsi: 'Mengubah akses user ' . $user->name,
+                model: $user,
+                properti: ['permissions' => ['lama' => $lama, 'baru' => $baru]],
+            );
+        }
 
         if ($request->wantsJson() && !$request->inertia()) {
             return responseSuccess(true);

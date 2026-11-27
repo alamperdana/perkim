@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PetaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MasterData\UserController;
@@ -11,7 +12,9 @@ use App\Http\Controllers\Konfigurasi\RoleController;
 use App\Http\Controllers\MasterData\TahunController;
 use App\Http\Controllers\Konfigurasi\AksesRoleController;
 use App\Http\Controllers\Konfigurasi\AksesUserController;
+use App\Http\Controllers\Konfigurasi\LogActivityController;
 use App\Http\Controllers\Konfigurasi\PermissionController;
+use App\Http\Controllers\Konfigurasi\PengaturanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,9 +27,8 @@ use App\Http\Controllers\Konfigurasi\PermissionController;
 |
 */
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', [PetaController::class, 'index'])->name('peta');
+Route::get('/peta/data', [PetaController::class, 'data'])->name('peta.data');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('Dashboard');
 
@@ -42,6 +44,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::group(['prefix' => 'konfigurasi', 'as' => 'konfigurasi.'], function () {
+        Route::get('pengaturan', [PengaturanController::class, 'edit'])->name('pengaturan.edit');
+        Route::put('pengaturan', [PengaturanController::class, 'update'])->name('pengaturan.update');
         Route::put('menu/sort', [MenuController::class, 'sort'])->name('menu.sort');
         Route::resource('menu', MenuController::class);
         Route::resource('roles', RoleController::class)->except(['create', 'show', 'edit']);
@@ -52,6 +56,7 @@ Route::middleware('auth')->group(function () {
         Route::get('akses-user', [AksesUserController::class, 'index'])->name('akses-user.index');
         Route::get('akses-user/{user}/user', [AksesUserController::class, 'getPermissionsByUser'])->name('akses-user.user');
         Route::put('akses-user/{user}', [AksesUserController::class, 'update'])->name('akses-user.update');
+        Route::get('log-activity', [LogActivityController::class, 'index'])->name('log-activity.index');
     });
 
     Route::group(['prefix' => 'master-data', 'as' => 'master-data.'], function () {

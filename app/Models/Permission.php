@@ -5,11 +5,12 @@ namespace App\Models;
 use App\Models\Konfigurasi\Menu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 use Spatie\Permission\Models\Permission as ModelsPermission;
 
 class Permission extends ModelsPermission
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     public function menus()
     {

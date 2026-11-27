@@ -5,6 +5,7 @@ namespace App\Listeners;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Session;
 
 class SuccessfulLoginListener
@@ -19,5 +20,15 @@ class SuccessfulLoginListener
     {
         // alert()->success('Login Berhasil', 'Selamat datang, ' . $event->user->name . '!');
         Session::flash('success', 'Selamat datang, ' . $event->user->name . '!');
+
+        if (!ActivityLogger::pertamaKaliUntuk($event)) {
+            return;
+        }
+
+        ActivityLogger::catat(
+            event: 'login',
+            deskripsi: 'Login ' . $event->user->name,
+            userId: $event->user->id,
+        );
     }
 }

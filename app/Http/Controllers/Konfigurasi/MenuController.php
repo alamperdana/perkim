@@ -8,6 +8,7 @@ use App\Http\Requests\Konfigurasi\MenuRequest;
 use App\Models\Konfigurasi\Menu;
 use App\Models\Permission;
 use App\Repositories\MenuRepository;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -82,6 +83,13 @@ class MenuController extends Controller
         Cache::forget('menus');
         
         BatchFacade::update(new Menu(), $data, 'id');
+
+        // BatchFacade tidak memicu event model, jadi urutan dicatat manual satu kali.
+        ActivityLogger::catat(
+            event: 'updated',
+            deskripsi: 'Mengubah urutan menu',
+            properti: ['jumlah_menu' => count($data)],
+        );
 
         if ($request->wantsJson() && !$request->inertia()) {
             return responseSuccess(true);
@@ -191,11 +199,15 @@ class MenuController extends Controller
             $menu->save();
 
             if ($oldUrl !== $newUrl) {
+                // Rename lewat query builder agar tidak menghasilkan log per permission.
+                // Perubahan URL sudah tercatat satu kali dari $menu->save() di atas.
                 $permissions = Permission::where('name', 'like', "%{$oldUrl}%")->get();
                 foreach ($permissions as $permission) {
-                    $permission->name = str_replace($oldUrl, $newUrl, $permission->name);
-                    $permission->save();
+                    DB::table('permissions')
+                        ->where('id', $permission->id)
+                        ->update(['name' => str_replace($oldUrl, $newUrl, $permission->name)]);
                 }
+                app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
             }
 
             Cache::forget('menus');
@@ -228,9 +240,17 @@ class MenuController extends Controller
             $this->authorize('delete konfigurasi/menu');
 
             $permissionIds = $menu->permissions()->pluck('permissions.id')->toArray();
+            $namaPermissionDihapus = Permission::whereIn('id', $permissionIds)->pluck('name')->toArray();
             $menu->permissions()->detach();
             Permission::whereIn('id', $permissionIds)->delete();
-            $menu->delete();
+            // Delete massal tidak memicu event model, jadi permission yang ikut terhapus dicatat di sini.
+            $menu->deleteQuietly();
+            ActivityLogger::catat(
+                event: 'deleted',
+                deskripsi: "Menghapus menu {$menu->name}",
+                model: $menu,
+                properti: ['permission_dihapus' => $namaPermissionDihapus],
+            );
 
             Cache::forget('menus');
             DB::commit();

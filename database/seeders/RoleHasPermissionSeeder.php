@@ -16,12 +16,26 @@ class RoleHasPermissionSeeder extends Seeder
     {
         $now = Carbon::now();
         
-        $data = [
-            ['permission_id' => 20, 'role_id' => 2],
-            ['permission_id' => 20, 'role_id' => 3]
+        // Cari permission lewat nama, karena id berbeda antar database.
+        $grants = [
+            'read master-data' => ['operator', 'user'],
         ];
 
-        // Insert data ke tabel role_has_permissions
-        DB::table('role_has_permissions')->insert($data);
+        foreach ($grants as $namaPermission => $namaRole) {
+            $permissionId = DB::table('permissions')->where('name', $namaPermission)->value('id');
+            $roleIds = DB::table('roles')->whereIn('name', $namaRole)->pluck('id');
+
+            if (! $permissionId) {
+                continue;
+            }
+
+            $data = $roleIds->map(fn ($roleId) => [
+                'permission_id' => $permissionId,
+                'role_id' => $roleId,
+            ])->all();
+
+            // insertOrIgnore agar seeder aman dijalankan ulang.
+            DB::table('role_has_permissions')->insertOrIgnore($data);
+        }
     }
 }

@@ -47,6 +47,8 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
         nama_satker?: string;
     };
     daftarTahun?: Array<{ id: number; tahun: number }>;
+    appName?: string;
+    logoUrl?: string | null;
 };
 
 declare global {

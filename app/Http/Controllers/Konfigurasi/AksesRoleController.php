@@ -6,6 +6,7 @@ use App\DataTables\Konfigurasi\RoleDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Repositories\MenuRepository;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -53,7 +54,18 @@ class AksesRoleController extends Controller
     {
         $this->authorize('update konfigurasi/akses-role');
 
+        $lama = $role->permissions()->pluck('name')->sort()->values()->all();
         $role->syncPermissions($request->input('permissions', []));
+        $baru = $role->fresh()->permissions()->pluck('name')->sort()->values()->all();
+
+        if ($lama !== $baru) {
+            ActivityLogger::catat(
+                event: 'akses_diubah',
+                deskripsi: 'Mengubah akses role ' . $role->name,
+                model: $role,
+                properti: ['permissions' => ['lama' => $lama, 'baru' => $baru]],
+            );
+        }
 
         if ($request->wantsJson() && !$request->inertia()) {
             return responseSuccess(true);

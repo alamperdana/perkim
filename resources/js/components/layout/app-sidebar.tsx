@@ -19,6 +19,7 @@ interface AppSidebarProps {
 export function AppSidebar({ collapsible = 'icon', variant = 'sidebar' }: AppSidebarProps) {
     const { props } = usePage<PageProps & { navigation?: Array<{ title: string; items: NavItem[] }> }>();
     const navigation = props.navigation || [];
+    const { appName, logoUrl } = props;
 
     // Selalu pastikan Dashboard ada di daftar navigasi jika tidak ada di DB
     const hasDashboard = navigation.some((group) =>
@@ -45,11 +46,11 @@ export function AppSidebar({ collapsible = 'icon', variant = 'sidebar' }: AppSid
         <Sidebar collapsible={collapsible} variant={variant}>
             <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
                 <Link href="/dashboard" className="flex items-center gap-3 group">
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-sm">
-                        <Building className="size-4" />
+                    <div className={`flex aspect-square size-8 items-center justify-center rounded-lg font-bold shadow-sm ${logoUrl ? '' : 'bg-primary text-primary-foreground'}`}>
+                        {logoUrl ? <img src={logoUrl} alt="" className="size-8 rounded-lg object-contain" /> : <Building className="size-4" />}
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                        <span className="truncate font-bold tracking-tight text-foreground">PERKIM</span>
+                        <span className="truncate font-bold tracking-tight text-foreground">{appName || 'PERKIM'}</span>
                         <span className="truncate text-[11px] text-muted-foreground">
                             Sistem Manajemen Data
                         </span>

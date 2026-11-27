@@ -25,6 +25,8 @@ class MenuSeeder extends Seeder
         $mm = Menu::firstOrCreate(['url' => 'konfigurasi'], ['name' => 'Konfigurasi', 'category' => 'MASTER DATA', 'icon' => 'settings']);
         $this->attachMenuPermission($mm, ['read'], null);
 
+        $sm = $mm->subMenus()->create(['name' => 'Pengaturan', 'url' => $mm->url . '/pengaturan', 'category' => $mm->category]);
+        $this->attachMenuPermission($sm, ['create', 'read', 'update', 'delete', 'sort'], null);
         $sm = $mm->subMenus()->create(['name' => 'Menu', 'url' => $mm->url . '/menu', 'category' => $mm->category]);
         $this->attachMenuPermission($sm, ['create', 'read', 'update', 'delete', 'sort'], null);
         $sm = $mm->subMenus()->create(['name' => 'Role', 'url' => $mm->url . '/roles', 'category' => $mm->category]);
@@ -35,6 +37,8 @@ class MenuSeeder extends Seeder
         $this->attachMenuPermission($sm, ['read', 'update'], null);
         $sm = $mm->subMenus()->create(['name' => 'Akses By User', 'url' => $mm->url . '/akses-user', 'category' => $mm->category]);
         $this->attachMenuPermission($sm, ['read', 'update'], null);
+        $sm = $mm->subMenus()->create(['name' => 'Log Aktifitas', 'url' => $mm->url . '/log-activity', 'category' => $mm->category]);
+        $this->attachMenuPermission($sm, ['read'], null);
 
         $mm = Menu::firstOrCreate(['url' => 'master-data'], ['name' => 'Master Data', 'category' => 'MASTER DATA', 'icon' => 'books']);
         $this->attachMenuPermission($mm, ['read'], null);

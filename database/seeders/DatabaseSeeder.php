@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             MenuSeeder::class, // Referensi
             TahunSeeder::class, // Referensi
             RoleHasPermissionSeeder::class,
+            PetaWilayahSeeder::class, // Referensi peta Kota Jambi
+            SettingSeeder::class, // Nilai awal menu Pengaturan
         ]);
     }
 }
